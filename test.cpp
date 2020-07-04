@@ -1,270 +1,305 @@
 #include <stdint.h>
 #include <cmath>
 #include <CppUTest/CommandLineTestRunner.h>
-#include "precomp_distance_module.h"
+#include "collect_ipd_module.h"
 
 TEST_GROUP(kmer_ipd)
 {
     // Tests for
-    // int collect_ipd_by_kmer(int k, int p, char *chars, float *tMeans, char **bases, hsize_t dim, double *sum, size_t *count);
+    // void collect_ipd_by_kmer(size_t const k, char const *chars, float const *tMeans, char **bases, size_t const dim,
+    //    double *tMean_sum, double *tMean_sq_sum, double *tMean_log2_sum, double *tMean_log2_sq_sum,
+    //    double *prediction_sum, double *prediction_sq_sum, double *prediction_log2_sum, double *prediction_log2_sq_sum, size_t *count, float const *modelPredictions,
+    //    unsigned int const *coverage, unsigned int const coverage_threshold,
+    //    size_t const outside_length, int const check_outside_coverage);
     char *chars = (char *)"ACGT";
     size_t dim = 10;
+    size_t coverage_threshold = 25;
+    double tolerance = 0.0001;
+
+    // Input arrays correspond to {pos1, neg1, pos2, neg2, ..., pos_n, neg_n}, that is,
     // positive: AACGC, negative: GC0TT
     const char *bases[10]      = {"A", "T", "A", "T", "C", "\0", "G", "C", "C", "G"};
     float tMeans[10]           = {1.5, 2.2, 3.1, 4.9, 5.5, 6.3, 7.2, 8.2, 9.1, 10.3};
     float modelPredictions[10] = {1.4, 2.1, 3.0, 4.8, 5.4, 6.2, 7.1, 8.1, 9.0, 10.2};
+    unsigned int coverage[10]  = { 30,  20,  30,  20,  30,  20,  30,  40,  40,   40};
 };
 
-TEST(kmer_ipd, k1)
+TEST(kmer_ipd, k1l0)
 {
-    int k = 1;
-    int p = 1;
+    size_t k = 1;
+    size_t outside_length = 0;
+    size_t total_length = k + 2 * outside_length;
+    int check_outside_coverage = 0;
     size_t kmers_size = (size_t)(std::pow(4, k) + 0.5);
     CHECK_EQUAL(kmers_size, 4);
-    double sum[kmers_size] = {0.0};
-    size_t count[kmers_size] = {0};
-    collect_ipd_by_kmer(k, p, chars, tMeans, (char **)bases, dim, sum, count, NULL, NULL, NULL);
-    CHECK_EQUAL((float)sum[0], 1.5f + 3.1f);
-    CHECK_EQUAL((float)sum[1], 5.5f + 8.2f + 9.1f);
-    CHECK_EQUAL((float)sum[2], 7.2f + 10.3f);
-    CHECK_EQUAL((float)sum[3], 2.2f + 4.9f);
-    CHECK_EQUAL(count[0], 2);
-    CHECK_EQUAL(count[1], 3);
-    CHECK_EQUAL(count[2], 2);
-    CHECK_EQUAL(count[3], 2);
+    size_t array_size = kmers_size * total_length;
+    double tMean_sum[array_size] = {0.0};
+    double tMean_sq_sum[array_size] = {0.0};
+    double tMean_log2_sum[array_size] = {0.0};
+    double tMean_log2_sq_sum[array_size] = {0.0};
+    double prediction_sum[array_size] = {0.0};
+    double prediction_sq_sum[array_size] = {0.0};
+    double prediction_log2_sum[array_size] = {0.0};
+    double prediction_log2_sq_sum[array_size] = {0.0};
+    size_t count[array_size] = {0};
+    collect_ipd_by_kmer(k, chars, tMeans, (char **)bases, dim, tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum,
+            prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count, modelPredictions, coverage, coverage_threshold, outside_length, check_outside_coverage);
+    CHECK_EQUAL(1.5f + 3.1f, (float)tMean_sum[0]);
+    CHECK_EQUAL(5.5f + 8.2f + 9.1f, (float)tMean_sum[1]);
+    CHECK_EQUAL(7.2f + 10.3f, (float)tMean_sum[2]);
+    CHECK_EQUAL(0.0, (float)tMean_sum[3]);
+    printf("all_double: %.17g, float_to_double: %.17g, all_float, %.17g, actual: %.17g\n", 1.5*1.5+3.1*3.1, (double)1.5f*(double)1.5f + (double)3.1f*(double)3.1f, 1.5f*1.5f+3.1f*3.1f, tMean_sq_sum[0]);
+    DOUBLES_EQUAL(1.5*1.5 + 3.1*3.1, tMean_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(5.5*5.5 + 8.2*8.2 + 9.1*9.1, tMean_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(7.2*7.2 + 10.3*10.3, tMean_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.5) + log2(3.1), tMean_log2_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.5) + log2(8.2) + log2(9.1), tMean_log2_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.2) + log2(10.3), tMean_log2_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_log2_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.5)*log2(1.5) + log2(3.1)*log2(3.1), tMean_log2_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.5)*log2(5.5) + log2(8.2)*log2(8.2) + log2(9.1)*log2(9.1), tMean_log2_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.2)*log2(7.2) + log2(10.3)*log2(10.3), tMean_log2_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_log2_sum[3], tolerance);
+    DOUBLES_EQUAL(1.4 + 3.0, prediction_sum[0], tolerance);
+    DOUBLES_EQUAL(5.4 + 8.1 + 9.0, prediction_sum[1], tolerance);
+    DOUBLES_EQUAL(7.1 + 10.2, prediction_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[3], tolerance);
+    DOUBLES_EQUAL(1.4*1.4 + 3.0*3.0, prediction_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(5.4*5.4 + 8.1*8.1 + 9.0*9.0, prediction_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(7.1*7.1 + 10.2*10.2, prediction_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.4) + log2(3.0), prediction_log2_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.4) + log2(8.1) + log2(9.0), prediction_log2_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.1) + log2(10.2), prediction_log2_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_log2_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.4)*log2(1.4) + log2(3.0)*log2(3.0), prediction_log2_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.4)*log2(5.4) + log2(8.1)*log2(8.1) + log2(9.0)*log2(9.0), prediction_log2_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.1)*log2(7.1) + log2(10.2)*log2(10.2), prediction_log2_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_log2_sum[3], tolerance);
+    CHECK_EQUAL(2, count[0]);
+    CHECK_EQUAL(3, count[1]);
+    CHECK_EQUAL(2, count[2]);
+    CHECK_EQUAL(0, count[3]);
 }
 
-TEST(kmer_ipd, k2p1)
+TEST(kmer_ipd, k2l1)
 {
-    int k = 2;
-    int p = 1;
+    size_t k = 2;
+    size_t outside_length = 1;
+    size_t total_length = k + 2 * outside_length;
+    int check_outside_coverage = 0;
     size_t kmers_size = (size_t)(std::pow(4, k) + 0.5);
-    CHECK_EQUAL(kmers_size, 16);
-    double sum[kmers_size] = {0.0};
-    size_t count[kmers_size] = {0};
-    collect_ipd_by_kmer(k, p, chars, tMeans, (char **)bases, dim, sum, count, NULL, NULL, NULL);
-    CHECK_EQUAL((float)sum[0], 1.5f); // AA
-    CHECK_EQUAL(count[0], 1);
-    CHECK_EQUAL((float)sum[1], 3.1f); // AC
-    CHECK_EQUAL(count[1], 1);
-    CHECK_EQUAL((float)sum[2], 0.0f); // AG
-    CHECK_EQUAL(count[2], 0);
-    CHECK_EQUAL((float)sum[3], 0.0f); // AT
-    CHECK_EQUAL(count[3], 0);
-    CHECK_EQUAL((float)sum[6], 5.5f); // CG
-    CHECK_EQUAL(count[6], 1);
-    CHECK_EQUAL((float)sum[9], 7.2f + 10.3f); // GC
-    CHECK_EQUAL(count[9], 2);
-    CHECK_EQUAL((float)sum[15], 4.9f); // TT
-    CHECK_EQUAL(count[15], 1);
+    CHECK_EQUAL(16, kmers_size);
+    size_t array_size = kmers_size * total_length;
+    double tMean_sum[array_size] = {0.0};
+    double tMean_sq_sum[array_size] = {0.0};
+    double tMean_log2_sum[array_size] = {0.0};
+    double tMean_log2_sq_sum[array_size] = {0.0};
+    double prediction_sum[array_size] = {0.0};
+    double prediction_sq_sum[array_size] = {0.0};
+    double prediction_log2_sum[array_size] = {0.0};
+    double prediction_log2_sq_sum[array_size] = {0.0};
+    size_t count[array_size] = {0};
+    collect_ipd_by_kmer(k, chars, tMeans, (char **)bases, dim, tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum,
+            prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count, modelPredictions, coverage, coverage_threshold, outside_length, check_outside_coverage);
+    // AA
+    DOUBLES_EQUAL(0.0, tMean_sum[0 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(1.5, tMean_sum[0 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(3.1, tMean_sum[0 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(5.5, tMean_sum[0 * total_length + 3], tolerance);
+    // AC
+    DOUBLES_EQUAL(1.5, tMean_sum[1 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(3.1, tMean_sum[1 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(5.5, tMean_sum[1 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(7.2, tMean_sum[1 * total_length + 3], tolerance);
+    // AG
+    DOUBLES_EQUAL(0.0, tMean_sum[2 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[2 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[2 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[2 * total_length + 3], tolerance);
+    // AT
+    DOUBLES_EQUAL(0.0, tMean_sum[3 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[3 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[3 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[3 * total_length + 3], tolerance);
+    // CA
+    DOUBLES_EQUAL(0.0, tMean_sum[4 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[4 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[4 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[4 * total_length + 3], tolerance);
+    // CC
+    DOUBLES_EQUAL(0.0, tMean_sum[5 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[5 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[5 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[5 * total_length + 3], tolerance);
+    // CG
+    DOUBLES_EQUAL(3.1, tMean_sum[6 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(5.5, tMean_sum[6 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(7.2, tMean_sum[6 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(9.1, tMean_sum[6 * total_length + 3], tolerance);
+    // CT
+    DOUBLES_EQUAL(0.0, tMean_sum[7 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[7 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[7 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[7 * total_length + 3], tolerance);
+    // GA
+    DOUBLES_EQUAL(0.0, tMean_sum[8 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[8 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[8 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[8 * total_length + 3], tolerance);
+    // GC
+    DOUBLES_EQUAL(5.5, tMean_sum[9 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(7.2 + 10.3, tMean_sum[9 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(9.1 + 8.2, tMean_sum[9 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[9 * total_length + 3], tolerance);
+    // GG
+    DOUBLES_EQUAL(0.0, tMean_sum[10 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[10 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[10 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[10 * total_length + 3], tolerance);
+    // GT
+    DOUBLES_EQUAL(0.0, tMean_sum[11 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[11 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[11 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[11 * total_length + 3], tolerance);
+    // TA
+    DOUBLES_EQUAL(0.0, tMean_sum[12 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[12 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[12 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[12 * total_length + 3], tolerance);
+    // TC
+    DOUBLES_EQUAL(0.0, tMean_sum[13 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[13 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[13 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[13 * total_length + 3], tolerance);
+    // TG
+    DOUBLES_EQUAL(0.0, tMean_sum[14 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[14 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[14 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[14 * total_length + 3], tolerance);
+    // TT
+    DOUBLES_EQUAL(0.0, tMean_sum[15 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[15 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[15 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sum[15 * total_length + 3], tolerance);
+
+    // AA
+    CHECK_EQUAL(0, count[0 * total_length + 0]);
+    CHECK_EQUAL(1, count[0 * total_length + 1]);
+    CHECK_EQUAL(1, count[0 * total_length + 2]);
+    CHECK_EQUAL(1, count[0 * total_length + 3]);
+    // AC
+    CHECK_EQUAL(1, count[1 * total_length + 0]);
+    CHECK_EQUAL(1, count[1 * total_length + 1]);
+    CHECK_EQUAL(1, count[1 * total_length + 2]);
+    CHECK_EQUAL(1, count[1 * total_length + 3]);
+    // AG
+    CHECK_EQUAL(0, count[2 * total_length + 0]);
+    CHECK_EQUAL(0, count[2 * total_length + 1]);
+    CHECK_EQUAL(0, count[2 * total_length + 2]);
+    CHECK_EQUAL(0, count[2 * total_length + 3]);
+    // AT
+    CHECK_EQUAL(0, count[3 * total_length + 0]);
+    CHECK_EQUAL(0, count[3 * total_length + 1]);
+    CHECK_EQUAL(0, count[3 * total_length + 2]);
+    CHECK_EQUAL(0, count[3 * total_length + 3]);
+    // CA
+    CHECK_EQUAL(0, count[4 * total_length + 0]);
+    CHECK_EQUAL(0, count[4 * total_length + 1]);
+    CHECK_EQUAL(0, count[4 * total_length + 2]);
+    CHECK_EQUAL(0, count[4 * total_length + 3]);
+    // CC
+    CHECK_EQUAL(0, count[5 * total_length + 0]);
+    CHECK_EQUAL(0, count[5 * total_length + 1]);
+    CHECK_EQUAL(0, count[5 * total_length + 2]);
+    CHECK_EQUAL(0, count[5 * total_length + 3]);
+    // CG
+    CHECK_EQUAL(1, count[6 * total_length + 0]);
+    CHECK_EQUAL(1, count[6 * total_length + 1]);
+    CHECK_EQUAL(1, count[6 * total_length + 2]);
+    CHECK_EQUAL(1, count[6 * total_length + 3]);
+    // CT
+    CHECK_EQUAL(0, count[7 * total_length + 0]);
+    CHECK_EQUAL(0, count[7 * total_length + 1]);
+    CHECK_EQUAL(0, count[7 * total_length + 2]);
+    CHECK_EQUAL(0, count[7 * total_length + 3]);
+    // GA
+    CHECK_EQUAL(0, count[8 * total_length + 0]);
+    CHECK_EQUAL(0, count[8 * total_length + 1]);
+    CHECK_EQUAL(0, count[8 * total_length + 2]);
+    CHECK_EQUAL(0, count[8 * total_length + 3]);
+    // GC
+    CHECK_EQUAL(1, count[9 * total_length + 0]);
+    CHECK_EQUAL(1 + 10.3, count[9 * total_length + 1]);
+    CHECK_EQUAL(1 + 8.2, count[9 * total_length + 2]);
+    CHECK_EQUAL(0, count[9 * total_length + 3]);
+    // GG
+    CHECK_EQUAL(0, count[10 * total_length + 0]);
+    CHECK_EQUAL(0, count[10 * total_length + 1]);
+    CHECK_EQUAL(0, count[10 * total_length + 2]);
+    CHECK_EQUAL(0, count[10 * total_length + 3]);
+    // GT
+    CHECK_EQUAL(0, count[11 * total_length + 0]);
+    CHECK_EQUAL(0, count[11 * total_length + 1]);
+    CHECK_EQUAL(0, count[11 * total_length + 2]);
+    CHECK_EQUAL(0, count[11 * total_length + 3]);
+    // TA
+    CHECK_EQUAL(0, count[12 * total_length + 0]);
+    CHECK_EQUAL(0, count[12 * total_length + 1]);
+    CHECK_EQUAL(0, count[12 * total_length + 2]);
+    CHECK_EQUAL(0, count[12 * total_length + 3]);
+    // TC
+    CHECK_EQUAL(0, count[13 * total_length + 0]);
+    CHECK_EQUAL(0, count[13 * total_length + 1]);
+    CHECK_EQUAL(0, count[13 * total_length + 2]);
+    CHECK_EQUAL(0, count[13 * total_length + 3]);
+    // TG
+    CHECK_EQUAL(0, count[14 * total_length + 0]);
+    CHECK_EQUAL(0, count[14 * total_length + 1]);
+    CHECK_EQUAL(0, count[14 * total_length + 2]);
+    CHECK_EQUAL(0, count[14 * total_length + 3]);
+    // TT
+    CHECK_EQUAL(0, count[15 * total_length + 0]);
+    CHECK_EQUAL(0, count[15 * total_length + 1]);
+    CHECK_EQUAL(0, count[15 * total_length + 2]);
+    CHECK_EQUAL(0, count[15 * total_length + 3]);
+
+    /*
+    // (old)
+    DOUBLES_EQUAL(1.5*1.5 + 3.1*3.1, tMean_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(5.5*5.5 + 8.2*8.2 + 9.1*9.1, tMean_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(7.2*7.2 + 10.3*10.3, tMean_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.5) + log2(3.1), tMean_log2_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.5) + log2(8.2) + log2(9.1), tMean_log2_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.2) + log2(10.3), tMean_log2_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_log2_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.5)*log2(1.5) + log2(3.1)*log2(3.1), tMean_log2_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.5)*log2(5.5) + log2(8.2)*log2(8.2) + log2(9.1)*log2(9.1), tMean_log2_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.2)*log2(7.2) + log2(10.3)*log2(10.3), tMean_log2_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_log2_sum[3], tolerance);
+    DOUBLES_EQUAL(1.4 + 3.0, prediction_sum[0], tolerance);
+    DOUBLES_EQUAL(5.4 + 8.1 + 9.0, prediction_sum[1], tolerance);
+    DOUBLES_EQUAL(7.1 + 10.2, prediction_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[3], tolerance);
+    DOUBLES_EQUAL(1.4*1.4 + 3.0*3.0, prediction_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(5.4*5.4 + 8.1*8.1 + 9.0*9.0, prediction_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(7.1*7.1 + 10.2*10.2, prediction_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.4) + log2(3.0), prediction_log2_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.4) + log2(8.1) + log2(9.0), prediction_log2_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.1) + log2(10.2), prediction_log2_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_log2_sum[3], tolerance);
+    DOUBLES_EQUAL(log2(1.4)*log2(1.4) + log2(3.0)*log2(3.0), prediction_log2_sq_sum[0], tolerance);
+    DOUBLES_EQUAL(log2(5.4)*log2(5.4) + log2(8.1)*log2(8.1) + log2(9.0)*log2(9.0), prediction_log2_sq_sum[1], tolerance);
+    DOUBLES_EQUAL(log2(7.1)*log2(7.1) + log2(10.2)*log2(10.2), prediction_log2_sq_sum[2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_log2_sum[3], tolerance);
+    */
 }
 
-TEST(kmer_ipd, k2p2)
-{
-    int k = 2;
-    int p = 2;
-    size_t kmers_size = (size_t)(std::pow(4, k) + 0.5);
-    CHECK_EQUAL(kmers_size, 16);
-    double sum[kmers_size] = {0.0};
-    size_t count[kmers_size] = {0};
-    collect_ipd_by_kmer(k, p, chars, tMeans, (char **)bases, dim, sum, count, "test.tmp.data_for_libsvm", modelPredictions, "test.tmp.pacbio_data");
-    CHECK_EQUAL((float)sum[0], 3.1f); // AA
-    CHECK_EQUAL(count[0], 1);
-    CHECK_EQUAL((float)sum[1], 5.5f); // AC
-    CHECK_EQUAL(count[1], 1);
-    CHECK_EQUAL((float)sum[2], 0.0f); // AG
-    CHECK_EQUAL(count[2], 0);
-    CHECK_EQUAL((float)sum[3], 0.0f); // AT
-    CHECK_EQUAL(count[3], 0);
-    CHECK_EQUAL((float)sum[6], 7.2f); // CG
-    CHECK_EQUAL(count[6], 1);
-    CHECK_EQUAL((float)sum[9], 9.1f + 8.2f); // GC
-    CHECK_EQUAL(count[9], 2);
-    CHECK_EQUAL((float)sum[15], 2.2f); // TT
-    CHECK_EQUAL(count[15], 1);
-}
-
-TEST(kmer_ipd, k4p3)
-{
-    int k = 4;
-    int p = 3;
-    size_t kmers_size = (size_t)(std::pow(4, k) + 0.5);
-    CHECK_EQUAL(kmers_size, 256);
-    double sum[kmers_size] = {0.0};
-    size_t count[kmers_size] = {0};
-    collect_ipd_by_kmer(k, p, chars, tMeans, (char **)bases, dim, sum, count, NULL, NULL, NULL);
-    CHECK_EQUAL((float)sum[0], 0.0f); // AAAA
-    CHECK_EQUAL(count[0], 0);
-    CHECK_EQUAL((float)sum[5], 0.0f); // AACC
-    CHECK_EQUAL(count[5], 0);
-    CHECK_EQUAL((float)sum[6], 5.5f); // AACG
-    CHECK_EQUAL(count[6], 1);
-    CHECK_EQUAL((float)sum[7], 0.0f); // AACT
-    CHECK_EQUAL(count[7], 0);
-    CHECK_EQUAL((float)sum[24], 0.0f); // ACGA
-    CHECK_EQUAL(count[24], 0);
-    CHECK_EQUAL((float)sum[25], 7.2f); // ACGC
-    CHECK_EQUAL(count[25], 1);
-    CHECK_EQUAL((float)sum[26], 0.0f); // ACGG
-    CHECK_EQUAL(count[26], 0);
-    CHECK_EQUAL((float)sum[241], 0.0f); // TTAC
-    CHECK_EQUAL(count[241], 0);
-    CHECK_EQUAL((float)sum[255], 0.0f); // TTTT
-    CHECK_EQUAL(count[255], 0);
-}
-
-TEST(kmer_ipd, k4p3update)
-{
-    int k = 4;
-    int p = 3;
-    size_t kmers_size = (size_t)(std::pow(4, k) + 0.5);
-    CHECK_EQUAL(kmers_size, 256);
-    double sum[kmers_size] = {0.0};
-    sum[24] = 240.8;
-    sum[25] = 250.9;
-    size_t count[kmers_size] = {0};
-    count[24] = 4200;
-    count[25] = 25005;
-    collect_ipd_by_kmer(k, p, chars, tMeans, (char **)bases, dim, sum, count, NULL, NULL, NULL);
-    CHECK_EQUAL((float)sum[0], 0.0f); // AAAA
-    CHECK_EQUAL(count[0], 0);
-    CHECK_EQUAL((float)sum[5], 0.0f); // AACC
-    CHECK_EQUAL(count[5], 0);
-    CHECK_EQUAL((float)sum[6], 5.5f); // AACG
-    CHECK_EQUAL(count[6], 1);
-    CHECK_EQUAL((float)sum[7], 0.0f); // AACT
-    CHECK_EQUAL(count[7], 0);
-    CHECK_EQUAL(sum[24], 240.8); // ACGA
-    CHECK_EQUAL(count[24], 4200);
-    CHECK_EQUAL(sum[25], 250.9 + 7.2f); // ACGC
-    CHECK_EQUAL(count[25], 25006);
-    CHECK_EQUAL((float)sum[26], 0.0f); // ACGG
-    CHECK_EQUAL(count[26], 0);
-    CHECK_EQUAL((float)sum[241], 0.0f); // TTAC
-    CHECK_EQUAL(count[241], 0);
-    CHECK_EQUAL((float)sum[255], 0.0f); // TTTT
-    CHECK_EQUAL(count[255], 0);
-}
-
-TEST_GROUP(insert_base){
-    // size_t insert_base_into_context(size_t context, size_t chars_size, size_t position, size_t base);
-};
-
-TEST(insert_base, test1){
-    // Assuming chars == "ACGT"
-    size_t context = 241; // TTAC
-    size_t chars_size = 4;
-    int k = 5;
-    size_t position = 1; // 0-based index
-    size_t base = 2; // G
-    size_t ret = insert_base_into_context(context, chars_size, k, position, base);
-    CHECK_EQUAL(ret, 945); // TGTAC
-}
-
-TEST(insert_base, test2){
-    // Assuming chars == "ACGT"
-    size_t context = 241; // TTAC
-    size_t chars_size = 4;
-    int k = 5;
-    size_t position = 4; // 0-based index
-    size_t base = 2; // G
-    size_t ret = insert_base_into_context(context, chars_size, k, position, base);
-    CHECK_EQUAL(ret, 966); // TTACG
-}
-
-TEST(insert_base, test3){
-    // Assuming chars == "ACGT"
-    size_t context = 241; // TTAC
-    size_t chars_size = 4;
-    int k = 5;
-    size_t position = 0; // 0-based index
-    size_t base = 2; // G
-    size_t ret = insert_base_into_context(context, chars_size, k, position, base);
-    CHECK_EQUAL(ret, 753); // GTTAC
-}
-
-TEST_GROUP(compute_distance){
-    // Tests for
-    // double compute_base_distance(size_t position, size_t base1, size_t base2, size_t chars_size, int k, double *ipd_sum, size_t *count, double count_threshold_rate);
-    size_t chars_size = 4;
-    int k = 4;
-    double ipd_sum[256] = {0.0};
-    size_t count[256] = {0};
-    double p1answer;
-    double p3answer;
-    size_t min_valid_context_count;
-
-    void setup(){
-        min_valid_context_count = SIZE_MAX;
-        ipd_sum[68] = 17.17; // CACA
-        count[68] = 6;
-        ipd_sum[69] = 20.2; // CACC
-        count[69] = 7;
-        ipd_sum[84] = 14.11; // CCCA
-        count[84] = 12;
-        ipd_sum[85] = 10.3; // CCCC
-        count[85] = 11;
-        ipd_sum[89] = 8.2; // CCGC
-        count[89] = 10;
-        p1answer = std::sqrt((((ipd_sum[68]/count[68] - ipd_sum[84]/count[84]) * (ipd_sum[68]/count[68] - ipd_sum[84]/count[84])) + ((ipd_sum[69]/count[69] - ipd_sum[85]/count[85]) * (ipd_sum[69]/count[69] - ipd_sum[85]/count[85]))) / 2);
-        p3answer = std::sqrt((((ipd_sum[68]/count[68] - ipd_sum[69]/count[69]) * (ipd_sum[68]/count[68] - ipd_sum[69]/count[69])) + ((ipd_sum[84]/count[84] - ipd_sum[85]/count[85]) * (ipd_sum[84]/count[84] - ipd_sum[85]/count[85]))) / 2);
-    }
-};
-
-TEST(compute_distance, p1pass){
-    size_t position = 1;
-    size_t base1 = 0; // A
-    size_t base2 = 1; // C
-    double count_threshold_rate = 0.031; // Actual rate should be 0.0312
-    double ret = compute_base_distance(position, base1, base2, chars_size, k, ipd_sum, count, count_threshold_rate, &min_valid_context_count);
-    CHECK_EQUAL(p1answer, ret);
-    CHECK_EQUAL(2, min_valid_context_count);
-}
-
-TEST(compute_distance, p1fail){
-    size_t position = 1;
-    size_t base1 = 0; // A
-    size_t base2 = 1; // C
-    double count_threshold_rate = 0.032; // Actual rate should be 0.0312
-    double ret = compute_base_distance(position, base1, base2, chars_size, k, ipd_sum, count, count_threshold_rate, &min_valid_context_count);
-    CHECK_EQUAL(-1.0, ret);
-    CHECK_EQUAL(2, min_valid_context_count);
-}
-
-TEST(compute_distance, p3pass){
-    size_t position = 3;
-    size_t base1 = 0; // A
-    size_t base2 = 1; // C
-    double count_threshold_rate = 0.031; // Actual rate should be 0.0312
-    double ret = compute_base_distance(position, base1, base2, chars_size, k, ipd_sum, count, count_threshold_rate, &min_valid_context_count);
-    CHECK_EQUAL(p3answer, ret);
-    CHECK_EQUAL(2, min_valid_context_count);
-}
-
-TEST(compute_distance, fill_distance_matrix){
-    // Test for
-    // int fill_base_distance_matrix(size_t chars_size, int k, double *ipd_sum, size_t *count, double count_threshold_rate, double position_relative_weight, double *matrix);
-    double matrix[256] = {0.0};
-    double count_threshold_rate = 0.031; // A value between 1/64 and 2/64
-    double position_relative_weight = 0.2;
-    fill_base_distance_matrix(chars_size, k, ipd_sum, count, count_threshold_rate, position_relative_weight, matrix);
-    CHECK_EQUAL(matrix[3*chars_size*chars_size + 2*chars_size + 3], -HUGE_VAL); // pos:3, base1:G, base2:T
-    CHECK_EQUAL(matrix[3*chars_size*chars_size + 3*chars_size + 3], 0.0); // pos:3, base1:T, base2:T
-    CHECK_EQUAL(matrix[1*chars_size*chars_size + 0*chars_size + 1], p1answer); // pos:1, base1:A, base2:C
-    CHECK_EQUAL(matrix[1*chars_size*chars_size + 1*chars_size + 0], p1answer); // pos:1, base1:C, base2:A
-    CHECK_EQUAL(matrix[2*chars_size*chars_size + 0*chars_size + 1], -HUGE_VAL); // pos:2, base1:A, base2:C
-    CHECK_EQUAL(matrix[2*chars_size*chars_size + 1*chars_size + 2], -HUGE_VAL); // pos:2, base1:C, base2:G
-    // Check using another threshold
-    double matrix2[256] = {0.0};
-    count_threshold_rate = 0.01; // less than 1/64
-    fill_base_distance_matrix(chars_size, k, ipd_sum, count, count_threshold_rate, position_relative_weight, matrix2);
-    CHECK(matrix2[2*chars_size*chars_size + 1*chars_size + 2] > 0.0); // pos:2, base1:C, base2:G
-    double p2ac_complement = position_relative_weight * matrix2[2*chars_size*chars_size + 1*chars_size + 2] + (1-position_relative_weight) * (matrix2[1*chars_size*chars_size + 1] + matrix2[3*chars_size*chars_size + 1*chars_size]) / 2;
-    CHECK_EQUAL(matrix2[2*chars_size*chars_size + 0*chars_size + 1], p2ac_complement); // pos:2, base1:A, base2:C
-}
 
 int main(int ac, char** av)
 {
     return CommandLineTestRunner::RunAllTests(ac, av);
 }
-
