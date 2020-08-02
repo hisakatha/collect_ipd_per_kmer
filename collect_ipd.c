@@ -9,7 +9,7 @@
 #include "collect_ipd_module.h"
 
 // Prepare for argp_parse
-char const *argp_program_version = "collect_ipd 0.1";
+char const *argp_program_version = "collect_ipd 1.0";
 char const *argp_program_bug_address = "<example@u-tokyo.ac.jp>";
 static char doc[] = "collect_ipd -- a program to collect IPDs and model prediction in HDF5 files specified as FILE(s).";
 static char args_doc[] = "FILE1 [FILE2...]";
@@ -48,7 +48,7 @@ static int parse_opt(int key, char *arg, struct argp_state *state){
             break;
         case 'l':
             lparsed = strtol(arg, &remain, 10);
-            if(arg[0] == '\0' || remain[0] != '\0' || lparsed <= 0){
+            if(arg[0] == '\0' || remain[0] != '\0' || lparsed < 0){
                 fprintf(stderr, "ERROR: Invalid argument for l\n"); argp_usage(state);
             }
             arguments->outside_length = lparsed;
@@ -58,7 +58,7 @@ static int parse_opt(int key, char *arg, struct argp_state *state){
             break;
         case 't':
             lparsed = strtol(arg, &remain, 10);
-            if(arg[0] == '\0' || remain[0] != '\0' || lparsed <= 0){
+            if(arg[0] == '\0' || remain[0] != '\0' || lparsed < 0){
                 fprintf(stderr, "ERROR: Invalid argument for t\n"); argp_usage(state);
             }
             arguments->coverage_threshold = lparsed;
@@ -100,9 +100,9 @@ void write_ipd_by_kmer(size_t const k, size_t const outside_length, size_t const
     }
     for (size_t kmer = 0; kmer < kmers_size; ++kmer) {
         size_t kmer_tmp = kmer;
-        for (size_t i = k - 1; i >= 0; --i) {
-            kmer_string[i] = chars[kmer_tmp % k];
-            kmer_tmp /= k;
+        for (int i = (int)k - 1; i >= 0; --i) {
+            kmer_string[i] = chars[kmer_tmp % chars_size];
+            kmer_tmp /= chars_size;
         }
         for (size_t i = 0; i < total_length; ++i) {
             size_t idx = kmer * total_length + i;
@@ -115,7 +115,7 @@ void write_ipd_by_kmer(size_t const k, size_t const outside_length, size_t const
     return;
 }
 
-void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const k, size_t const outside_length,
+void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const file_index, size_t const k, size_t const outside_length,
         size_t const chars_size, char const *chars, size_t const kmers_size, size_t const coverage_threshold, FILE *output,
         double *tMean_sum, double *tMean_sq_sum, double *tMean_log2_sum, double *tMean_log2_sq_sum,
         double *prediction_sum, double *prediction_sq_sum, double *prediction_log2_sum, double *prediction_log2_sq_sum, size_t *count){
@@ -244,9 +244,14 @@ void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const k, size_t
         // Summarize IPD
         // TODO: It may be effective to parallelize this call
         // For example, using pthread at the expence of memory usage
-        int check_outside_coverage = 0;
+        int check_outside_coverage = 1;
         collect_ipd_by_kmer(k, chars, tMean_buf, base_buf, (size_t)tMean_dim, tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum,
                 prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count, modelPrediction_buf, coverage_buf, coverage_threshold, outside_length, check_outside_coverage);
+
+        // Write data per chromosome
+        int print_header = (i == 0) ? 1 : 0;
+        write_ipd_by_kmer(k, outside_length, chars_size, chars, name, file_index,
+                tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum, prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count, print_header, output);
 
         // Ending process
         free(tMean_buf);
@@ -258,10 +263,6 @@ void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const k, size_t
         free(tMean_name);
         free(base_name);
 
-        // Write data per chromosome
-        int print_header = (i == 0) ? 1 : 0;
-        write_ipd_by_kmer(k, outside_length, chars_size, chars, name, i,
-                tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum, prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count, print_header, output);
         // Reset tMean_sum and so on
         size_t total_length = k + 2 * outside_length;
         memset(tMean_sum, 0, total_length * sizeof(double));
@@ -349,7 +350,7 @@ int main(int argc, char **argv){
         if(strcmp(arguments.file_paths[i] + file_path_len - 3, ".h5") != 0){
             fprintf(stderr, "WARNING: %s may not be a HDF5 file. Continuing.", arguments.file_paths[i]);
         }
-        collect_ipd_by_kmer_from_hdf5(arguments.file_paths[i], arguments.k, arguments.outside_length, chars_size, arguments.chars, kmers_size, arguments.coverage_threshold, output,
+        collect_ipd_by_kmer_from_hdf5(arguments.file_paths[i], i, arguments.k, arguments.outside_length, chars_size, arguments.chars, kmers_size, arguments.coverage_threshold, output,
                 tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum, prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count);
     }
 

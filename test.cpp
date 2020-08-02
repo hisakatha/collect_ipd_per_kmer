@@ -88,7 +88,7 @@ TEST(kmer_ipd, k2l1)
     size_t k = 2;
     size_t outside_length = 1;
     size_t total_length = k + 2 * outside_length;
-    int check_outside_coverage = 0;
+    int check_outside_coverage = 1;
     size_t kmers_size = (size_t)(std::pow(4, k) + 0.5);
     CHECK_EQUAL(16, kmers_size);
     size_t array_size = kmers_size * total_length;
@@ -185,6 +185,249 @@ TEST(kmer_ipd, k2l1)
     DOUBLES_EQUAL(0.0, tMean_sum[15 * total_length + 3], tolerance);
 
     // AA
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[0 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(1.5 * 1.5, tMean_sq_sum[0 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(3.1 * 3.1, tMean_sq_sum[0 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(5.5 * 5.5, tMean_sq_sum[0 * total_length + 3], tolerance);
+    // AC
+    DOUBLES_EQUAL(1.5 * 1.5, tMean_sq_sum[1 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(3.1 * 3.1, tMean_sq_sum[1 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(5.5 * 5.5, tMean_sq_sum[1 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(7.2 * 7.2, tMean_sq_sum[1 * total_length + 3], tolerance);
+    // AG
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[2 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[2 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[2 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[2 * total_length + 3], tolerance);
+    // AT
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[3 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[3 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[3 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[3 * total_length + 3], tolerance);
+    // CA
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[4 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[4 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[4 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[4 * total_length + 3], tolerance);
+    // CC
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[5 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[5 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[5 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[5 * total_length + 3], tolerance);
+    // CG
+    DOUBLES_EQUAL(3.1 * 3.1, tMean_sq_sum[6 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(5.5 * 5.5, tMean_sq_sum[6 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(7.2 * 7.2, tMean_sq_sum[6 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(9.1 * 9.1, tMean_sq_sum[6 * total_length + 3], tolerance);
+    // CT
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[7 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[7 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[7 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[7 * total_length + 3], tolerance);
+    // GA
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[8 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[8 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[8 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[8 * total_length + 3], tolerance);
+    // GC
+    DOUBLES_EQUAL(5.5 * 5.5, tMean_sq_sum[9 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(7.2 * 7.2 + 10.3 * 10.3, tMean_sq_sum[9 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(9.1 * 9.1 + 8.2 * 8.2, tMean_sq_sum[9 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[9 * total_length + 3], tolerance);
+    // GG
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[10 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[10 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[10 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[10 * total_length + 3], tolerance);
+    // GT
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[11 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[11 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[11 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[11 * total_length + 3], tolerance);
+    // TA
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[12 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[12 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[12 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[12 * total_length + 3], tolerance);
+    // TC
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[13 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[13 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[13 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[13 * total_length + 3], tolerance);
+    // TG
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[14 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[14 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[14 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[14 * total_length + 3], tolerance);
+    // TT
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[15 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[15 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[15 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, tMean_sq_sum[15 * total_length + 3], tolerance);
+
+    // AA
+    DOUBLES_EQUAL(0.0, prediction_sum[0 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(1.4, prediction_sum[0 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(3.0, prediction_sum[0 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(5.4, prediction_sum[0 * total_length + 3], tolerance);
+    // AC
+    DOUBLES_EQUAL(1.4, prediction_sum[1 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(3.0, prediction_sum[1 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(5.4, prediction_sum[1 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(7.1, prediction_sum[1 * total_length + 3], tolerance);
+    // AG
+    DOUBLES_EQUAL(0.0, prediction_sum[2 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[2 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[2 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[2 * total_length + 3], tolerance);
+    // AT
+    DOUBLES_EQUAL(0.0, prediction_sum[3 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[3 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[3 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[3 * total_length + 3], tolerance);
+    // CA
+    DOUBLES_EQUAL(0.0, prediction_sum[4 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[4 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[4 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[4 * total_length + 3], tolerance);
+    // CC
+    DOUBLES_EQUAL(0.0, prediction_sum[5 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[5 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[5 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[5 * total_length + 3], tolerance);
+    // CG
+    DOUBLES_EQUAL(3.0, prediction_sum[6 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(5.4, prediction_sum[6 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(7.1, prediction_sum[6 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(9.0, prediction_sum[6 * total_length + 3], tolerance);
+    // CT
+    DOUBLES_EQUAL(0.0, prediction_sum[7 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[7 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[7 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[7 * total_length + 3], tolerance);
+    // GA
+    DOUBLES_EQUAL(0.0, prediction_sum[8 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[8 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[8 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[8 * total_length + 3], tolerance);
+    // GC
+    DOUBLES_EQUAL(5.4, prediction_sum[9 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(7.1 + 10.2, prediction_sum[9 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(9.0 + 8.1, prediction_sum[9 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[9 * total_length + 3], tolerance);
+    // GG
+    DOUBLES_EQUAL(0.0, prediction_sum[10 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[10 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[10 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[10 * total_length + 3], tolerance);
+    // GT
+    DOUBLES_EQUAL(0.0, prediction_sum[11 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[11 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[11 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[11 * total_length + 3], tolerance);
+    // TA
+    DOUBLES_EQUAL(0.0, prediction_sum[12 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[12 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[12 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[12 * total_length + 3], tolerance);
+    // TC
+    DOUBLES_EQUAL(0.0, prediction_sum[13 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[13 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[13 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[13 * total_length + 3], tolerance);
+    // TG
+    DOUBLES_EQUAL(0.0, prediction_sum[14 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[14 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[14 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[14 * total_length + 3], tolerance);
+    // TT
+    DOUBLES_EQUAL(0.0, prediction_sum[15 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[15 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[15 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sum[15 * total_length + 3], tolerance);
+
+    // AA
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[0 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(1.4 * 1.4, prediction_sq_sum[0 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(3.0 * 3.0, prediction_sq_sum[0 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(5.4 * 5.4, prediction_sq_sum[0 * total_length + 3], tolerance);
+    // AC
+    DOUBLES_EQUAL(1.4 * 1.4, prediction_sq_sum[1 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(3.0 * 3.0, prediction_sq_sum[1 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(5.4 * 5.4, prediction_sq_sum[1 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(7.1 * 7.1, prediction_sq_sum[1 * total_length + 3], tolerance);
+    // AG
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[2 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[2 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[2 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[2 * total_length + 3], tolerance);
+    // AT
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[3 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[3 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[3 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[3 * total_length + 3], tolerance);
+    // CA
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[4 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[4 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[4 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[4 * total_length + 3], tolerance);
+    // CC
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[5 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[5 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[5 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[5 * total_length + 3], tolerance);
+    // CG
+    DOUBLES_EQUAL(3.0 * 3.0, prediction_sq_sum[6 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(5.4 * 5.4, prediction_sq_sum[6 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(7.1 * 7.1, prediction_sq_sum[6 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(9.0 * 9.0, prediction_sq_sum[6 * total_length + 3], tolerance);
+    // CT
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[7 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[7 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[7 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[7 * total_length + 3], tolerance);
+    // GA
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[8 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[8 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[8 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[8 * total_length + 3], tolerance);
+    // GC
+    DOUBLES_EQUAL(5.4 * 5.4, prediction_sq_sum[9 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(7.1 * 7.1 + 10.2 * 10.2, prediction_sq_sum[9 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(9.0 * 9.0 + 8.1 * 8.1, prediction_sq_sum[9 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[9 * total_length + 3], tolerance);
+    // GG
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[10 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[10 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[10 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[10 * total_length + 3], tolerance);
+    // GT
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[11 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[11 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[11 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[11 * total_length + 3], tolerance);
+    // TA
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[12 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[12 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[12 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[12 * total_length + 3], tolerance);
+    // TC
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[13 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[13 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[13 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[13 * total_length + 3], tolerance);
+    // TG
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[14 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[14 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[14 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[14 * total_length + 3], tolerance);
+    // TT
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[15 * total_length + 0], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[15 * total_length + 1], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[15 * total_length + 2], tolerance);
+    DOUBLES_EQUAL(0.0, prediction_sq_sum[15 * total_length + 3], tolerance);
+
+    // AA
     CHECK_EQUAL(0, count[0 * total_length + 0]);
     CHECK_EQUAL(1, count[0 * total_length + 1]);
     CHECK_EQUAL(1, count[0 * total_length + 2]);
@@ -231,8 +474,8 @@ TEST(kmer_ipd, k2l1)
     CHECK_EQUAL(0, count[8 * total_length + 3]);
     // GC
     CHECK_EQUAL(1, count[9 * total_length + 0]);
-    CHECK_EQUAL(1 + 10.3, count[9 * total_length + 1]);
-    CHECK_EQUAL(1 + 8.2, count[9 * total_length + 2]);
+    CHECK_EQUAL(2, count[9 * total_length + 1]);
+    CHECK_EQUAL(2, count[9 * total_length + 2]);
     CHECK_EQUAL(0, count[9 * total_length + 3]);
     // GG
     CHECK_EQUAL(0, count[10 * total_length + 0]);
@@ -265,37 +508,6 @@ TEST(kmer_ipd, k2l1)
     CHECK_EQUAL(0, count[15 * total_length + 2]);
     CHECK_EQUAL(0, count[15 * total_length + 3]);
 
-    /*
-    // (old)
-    DOUBLES_EQUAL(1.5*1.5 + 3.1*3.1, tMean_sq_sum[0], tolerance);
-    DOUBLES_EQUAL(5.5*5.5 + 8.2*8.2 + 9.1*9.1, tMean_sq_sum[1], tolerance);
-    DOUBLES_EQUAL(7.2*7.2 + 10.3*10.3, tMean_sq_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, tMean_sq_sum[3], tolerance);
-    DOUBLES_EQUAL(log2(1.5) + log2(3.1), tMean_log2_sum[0], tolerance);
-    DOUBLES_EQUAL(log2(5.5) + log2(8.2) + log2(9.1), tMean_log2_sum[1], tolerance);
-    DOUBLES_EQUAL(log2(7.2) + log2(10.3), tMean_log2_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, tMean_log2_sum[3], tolerance);
-    DOUBLES_EQUAL(log2(1.5)*log2(1.5) + log2(3.1)*log2(3.1), tMean_log2_sq_sum[0], tolerance);
-    DOUBLES_EQUAL(log2(5.5)*log2(5.5) + log2(8.2)*log2(8.2) + log2(9.1)*log2(9.1), tMean_log2_sq_sum[1], tolerance);
-    DOUBLES_EQUAL(log2(7.2)*log2(7.2) + log2(10.3)*log2(10.3), tMean_log2_sq_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, tMean_log2_sum[3], tolerance);
-    DOUBLES_EQUAL(1.4 + 3.0, prediction_sum[0], tolerance);
-    DOUBLES_EQUAL(5.4 + 8.1 + 9.0, prediction_sum[1], tolerance);
-    DOUBLES_EQUAL(7.1 + 10.2, prediction_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, prediction_sum[3], tolerance);
-    DOUBLES_EQUAL(1.4*1.4 + 3.0*3.0, prediction_sq_sum[0], tolerance);
-    DOUBLES_EQUAL(5.4*5.4 + 8.1*8.1 + 9.0*9.0, prediction_sq_sum[1], tolerance);
-    DOUBLES_EQUAL(7.1*7.1 + 10.2*10.2, prediction_sq_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, prediction_sq_sum[3], tolerance);
-    DOUBLES_EQUAL(log2(1.4) + log2(3.0), prediction_log2_sum[0], tolerance);
-    DOUBLES_EQUAL(log2(5.4) + log2(8.1) + log2(9.0), prediction_log2_sum[1], tolerance);
-    DOUBLES_EQUAL(log2(7.1) + log2(10.2), prediction_log2_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, prediction_log2_sum[3], tolerance);
-    DOUBLES_EQUAL(log2(1.4)*log2(1.4) + log2(3.0)*log2(3.0), prediction_log2_sq_sum[0], tolerance);
-    DOUBLES_EQUAL(log2(5.4)*log2(5.4) + log2(8.1)*log2(8.1) + log2(9.0)*log2(9.0), prediction_log2_sq_sum[1], tolerance);
-    DOUBLES_EQUAL(log2(7.1)*log2(7.1) + log2(10.2)*log2(10.2), prediction_log2_sq_sum[2], tolerance);
-    DOUBLES_EQUAL(0.0, prediction_log2_sum[3], tolerance);
-    */
 }
 
 

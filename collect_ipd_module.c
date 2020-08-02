@@ -21,8 +21,8 @@ void collect_ipd_by_kmer(size_t const k, char const *chars, float const *tMeans,
         double *prediction_sum, double *prediction_sq_sum, double *prediction_log2_sum, double *prediction_log2_sq_sum, size_t *count, float const *modelPredictions,
         unsigned int const *coverage, unsigned int const coverage_threshold,
         size_t const outside_length, int const check_outside_coverage) {
-    assert(dim % 2 == 0);
-    assert(k < dim / 2);
+    if(dim % 2 != 0){ fprintf(stderr, "ERROR: length of input kinetics data must be even\n"); exit(EXIT_FAILURE); }
+    if(k > dim / 2){ fprintf(stderr, "ERROR: length of input kinetics data is shorter than the length of k-mer\n"); exit(EXIT_FAILURE); }
     size_t chars_size = strlen(chars);
     size_t total_length = k + 2 * outside_length;
     // Prepare context holders for positive and negative strands
@@ -66,7 +66,6 @@ void collect_ipd_by_kmer(size_t const k, char const *chars, float const *tMeans,
             }
             context[k - 1] = base_char - chars;
             if (context[k - 1] == chars_size || cur_coverage < coverage_threshold) {
-                //assert(bases[i][0] == '\0');
                 *state = k;
             } else {
                 *state = *state - 1;
@@ -82,10 +81,15 @@ void collect_ipd_by_kmer(size_t const k, char const *chars, float const *tMeans,
                 sum_idx = chars_size * sum_idx + context[context_idx];
             }
             sum_idx *= total_length;
-            size_t tMean_idx_min = i - 2 * (k + outside_length - 1);
-            size_t tMean_idx_max = i + 2 * outside_length;
+            long long int tMean_idx_min_raw = i - 2 * (k + outside_length - 1);
+            long long int tMean_idx_min = (tMean_idx_min_raw < 0) ? 0 : tMean_idx_min_raw;
+            long long int tMean_idx_max_raw = i + 2 * outside_length;
+            //size_t tMean_idx_max = (tMean_idx_max_raw <= dim) ? tMean_idx_max_raw : (isPositive ? (dim - 2) : (dim - 1));
+            long long int tMean_idx_max = (tMean_idx_max_raw <= dim - 1) ? tMean_idx_max_raw : (dim - 1);
+            // Shift sum_idx when tMean_idx_min or tMean_idx_max is shifted
+            sum_idx += (isPositive) ? (tMean_idx_min - tMean_idx_min_raw) / 2 : (tMean_idx_max_raw - tMean_idx_max) / 2;
             if(isPositive) {
-                for (size_t tMean_idx = (tMean_idx_min < 0) ? 0 : tMean_idx_min; tMean_idx < dim && tMean_idx <= tMean_idx_max; tMean_idx += 2) {
+                for (long long int tMean_idx = tMean_idx_min; tMean_idx <= tMean_idx_max; tMean_idx += 2) {
                     double tMean = tMeans[tMean_idx];
                     double prediction = modelPredictions[tMean_idx];
                     if (tMean > 0.0 && (check_outside_coverage != 1 || coverage[tMean_idx] >= coverage_threshold)) {
@@ -104,7 +108,7 @@ void collect_ipd_by_kmer(size_t const k, char const *chars, float const *tMeans,
                     ++sum_idx;
                 }
             } else {
-                for (size_t tMean_idx = (tMean_idx_max >= dim) ? dim - 1 : tMean_idx_max; tMean_idx >= 0 && tMean_idx >= tMean_idx_min; tMean_idx -= 2) {
+                for (long long int tMean_idx = tMean_idx_max; tMean_idx >= tMean_idx_min; tMean_idx -= 2) {
                     double tMean = tMeans[tMean_idx];
                     double prediction = modelPredictions[tMean_idx];
                     if (tMean > 0.0 && (check_outside_coverage != 1 || coverage[tMean_idx] >= coverage_threshold)) {
