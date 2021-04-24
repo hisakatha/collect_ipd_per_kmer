@@ -1,0 +1,2 @@
+This program collects IPDs from SMRT-seq kinetics HDF5 files,
+and outputs sums of IPDs (and so on) per k-mer per chromosome.
