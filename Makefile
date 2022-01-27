@@ -1,6 +1,6 @@
 CC = $(HOME)/hdf5-1.10.1-linux-centos7-x86_64-gcc485-shared/bin/h5cc
 #CFLAGS = -std=gnu99 -Wall -g
-CFLAGS = -std=gnu99 -Wall -O3 -DNDEBUG
+CFLAGS = -std=gnu99 -Wall -Wsign-compare -O3 -DNDEBUG
 TARGET = collect_ipd
 TARGET_SUB = collect_ipd_module
 TARGET_ALL = $(TARGET) $(TARGET_SUB)
