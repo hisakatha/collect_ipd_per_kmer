@@ -241,6 +241,20 @@ void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const file_inde
         if(hstatus < 0) { fprintf(stderr, "ERROR: Failure in reading Dataset %s\n", coverage_name); exit(EXIT_FAILURE); }
         free(coverage_name);
 
+        // Initialize tMean_sum and so on
+        size_t total_length = kmers_size * (k + 2 * outside_length);
+        if(total_length > SIZE_MAX / sizeof(double)) { fprintf(stderr, "ERROR: memset will overflow\n"); exit(EXIT_FAILURE); }
+        if(total_length > SIZE_MAX / sizeof(size_t)) { fprintf(stderr, "ERROR: memset will overflow\n"); exit(EXIT_FAILURE); }
+        memset(tMean_sum, 0, total_length * sizeof(double));
+        memset(tMean_sq_sum, 0, total_length * sizeof(double));
+        memset(tMean_log2_sum, 0, total_length * sizeof(double));
+        memset(tMean_log2_sq_sum, 0, total_length * sizeof(double));
+        memset(prediction_sum, 0, total_length * sizeof(double));
+        memset(prediction_sq_sum, 0, total_length * sizeof(double));
+        memset(prediction_log2_sum, 0, total_length * sizeof(double));
+        memset(prediction_log2_sq_sum, 0, total_length * sizeof(double));
+        memset(count, 0, total_length * sizeof(size_t));
+
         // Summarize IPD
         // TODO: It may be effective to parallelize this call
         // For example, using pthread at the expence of memory usage
@@ -254,6 +268,7 @@ void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const file_inde
                 tMean_sum, tMean_sq_sum, tMean_log2_sum, tMean_log2_sq_sum, prediction_sum, prediction_sq_sum, prediction_log2_sum, prediction_log2_sq_sum, count, print_header, output);
 
         // Ending process
+        // TODO: save "free" and use "realloc" for performance
         free(tMean_buf);
         free(base_buf[0]);
         free(base_buf);
@@ -262,18 +277,6 @@ void collect_ipd_by_kmer_from_hdf5(char const *file_path, size_t const file_inde
         free(name);
         free(tMean_name);
         free(base_name);
-
-        // Reset tMean_sum and so on
-        size_t total_length = k + 2 * outside_length;
-        memset(tMean_sum, 0, total_length * sizeof(double));
-        memset(tMean_sq_sum, 0, total_length * sizeof(double));
-        memset(tMean_log2_sum, 0, total_length * sizeof(double));
-        memset(tMean_log2_sq_sum, 0, total_length * sizeof(double));
-        memset(prediction_sum, 0, total_length * sizeof(double));
-        memset(prediction_sq_sum, 0, total_length * sizeof(double));
-        memset(prediction_log2_sum, 0, total_length * sizeof(double));
-        memset(prediction_log2_sq_sum, 0, total_length * sizeof(double));
-        memset(count, 0, total_length * sizeof(size_t));
     }
     H5Fclose(file_id);
     return;
@@ -319,31 +322,22 @@ int main(int argc, char **argv){
     size_t total_length = kmers_size * (arguments.k + 2 * arguments.outside_length);
     double *tMean_sum = (double *)malloc(total_length * sizeof(double));
     if(tMean_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for tMean_sum\n"); exit(EXIT_FAILURE); }
-    memset(tMean_sum, 0, total_length * sizeof(double));
     double *tMean_sq_sum = (double *)malloc(total_length * sizeof(double));
     if(tMean_sq_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for tMean_sq_sum\n"); exit(EXIT_FAILURE); }
-    memset(tMean_sq_sum, 0, total_length * sizeof(double));
     double *tMean_log2_sum = (double *)malloc(total_length * sizeof(double));
     if(tMean_log2_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for tMean_log2_sum\n"); exit(EXIT_FAILURE); }
-    memset(tMean_log2_sum, 0, total_length * sizeof(double));
     double *tMean_log2_sq_sum = (double *)malloc(total_length * sizeof(double));
     if(tMean_log2_sq_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for tMean_log2_sq_sum\n"); exit(EXIT_FAILURE); }
-    memset(tMean_log2_sq_sum, 0, total_length * sizeof(double));
     double *prediction_sum = (double *)malloc(total_length * sizeof(double));
     if(prediction_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for prediction_sum\n"); exit(EXIT_FAILURE); }
-    memset(prediction_sum, 0, total_length * sizeof(double));
     double *prediction_sq_sum = (double *)malloc(total_length * sizeof(double));
     if(prediction_sq_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for prediction_sq_sum\n"); exit(EXIT_FAILURE); }
-    memset(prediction_sq_sum, 0, total_length * sizeof(double));
     double *prediction_log2_sum = (double *)malloc(total_length * sizeof(double));
     if(prediction_log2_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for prediction_log2_sum\n"); exit(EXIT_FAILURE); }
-    memset(prediction_log2_sum, 0, total_length * sizeof(double));
     double *prediction_log2_sq_sum = (double *)malloc(total_length * sizeof(double));
     if(prediction_log2_sq_sum == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for prediction_log2_sq_sum\n"); exit(EXIT_FAILURE); }
-    memset(prediction_log2_sq_sum, 0, total_length * sizeof(double));
     size_t *count = (size_t *)malloc(total_length * sizeof(size_t));
     if(count == NULL) { fprintf(stderr, "ERROR: Cannot allocate memory for count\n"); exit(EXIT_FAILURE); }
-    memset(count, 0, total_length * sizeof(size_t));
 
     for(size_t i = 0; i < arguments.file_num; ++i){
         size_t file_path_len = strlen(arguments.file_paths[i]);
